@@ -8,11 +8,12 @@ RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn package -DskipTests
 
-FROM amazoncorretto:17-alpine
+FROM amazoncorretto:17
 
 WORKDIR /app
 
 COPY --from=build /app/target/springboot-app-1.0.0.jar app.jar
+COPY generate-traffic.sh .
 
 ENV PORT=8080
 ENV SERVICE_NAME=java-springboot-app

@@ -42,17 +42,12 @@ for APP_ENTRY in "${APPS[@]}"; do
         echo "ECR repository already exists: $ECR_REPO_NAME"
     fi
 
-    # Build Docker image
-    echo "Building Docker image..."
-    docker build -t $ECR_REPO_NAME:latest $APP_DIR
-
-    # Tag image for ECR
-    echo "Tagging image for ECR..."
-    docker tag $ECR_REPO_NAME:latest $ECR_URI:latest
-
-    # Push to ECR
-    echo "Pushing image to ECR..."
-    docker push $ECR_URI:latest
+    # Build multi-platform Docker image and push to ECR
+    echo "Building and pushing multi-platform Docker image..."
+    docker buildx build --platform linux/amd64,linux/arm64 \
+        -t $ECR_URI:latest \
+        --push \
+        $APP_DIR
 
     echo "✓ Successfully pushed $ECR_REPO_NAME to ECR"
     echo ""

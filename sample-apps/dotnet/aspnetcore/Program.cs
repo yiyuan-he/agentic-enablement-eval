@@ -1,10 +1,12 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 var serviceName = Environment.GetEnvironmentVariable("SERVICE_NAME") ?? "dotnet-aspnetcore-app";
+var region = Environment.GetEnvironmentVariable("AWS_REGION");
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -13,7 +15,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
-var s3Client = new AmazonS3Client();
+var s3Client = new AmazonS3Client(RegionEndpoint.GetBySystemName(region));
 
 app.MapGet("/health", () =>
 {

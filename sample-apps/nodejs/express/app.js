@@ -4,7 +4,7 @@ const { S3Client, ListBucketsCommand } = require('@aws-sdk/client-s3');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'nodejs-express-app';
-const s3Client = new S3Client({});
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
 app.get('/health', (req, res) => {
   res.json({

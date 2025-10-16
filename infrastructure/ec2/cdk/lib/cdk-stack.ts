@@ -73,6 +73,7 @@ export class EC2AppStack extends cdk.Stack {
       `  -p ${config.port}:${config.port} \\`,
       `  -e PORT=${config.port} \\`,
       `  -e SERVICE_NAME=${config.serviceName} \\`,
+      `  -e AWS_REGION=${this.region} \\`,
       `  ${ecrImageUri}`,
       '',
       '# Wait for application to start',

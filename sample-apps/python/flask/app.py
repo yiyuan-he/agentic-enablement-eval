@@ -7,7 +7,8 @@ app = Flask(__name__)
 
 PORT = int(os.environ.get('PORT', 5000))
 SERVICE_NAME = os.environ.get('SERVICE_NAME', 'python-flask-app')
-s3_client = boto3.client('s3')
+AWS_REGION = os.environ.get('AWS_REGION')
+s3_client = boto3.client('s3', region_name=AWS_REGION)
 
 @app.route('/health')
 def health():

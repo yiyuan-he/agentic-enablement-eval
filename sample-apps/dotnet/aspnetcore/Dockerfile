@@ -13,6 +13,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 COPY --from=build /app/out .
+COPY generate-traffic.sh .
 
 ENV PORT=5000
 ENV SERVICE_NAME=dotnet-aspnetcore-app

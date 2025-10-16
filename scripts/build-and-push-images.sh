@@ -14,16 +14,18 @@ echo ""
 # Authenticate Docker with ECR
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-# Define apps to build
-declare -A APPS
-APPS["python-flask"]="sample-apps/python/flask"
-APPS["nodejs-express"]="sample-apps/nodejs/express"
-APPS["java-springboot"]="sample-apps/java/springboot"
-APPS["dotnet-aspnetcore"]="sample-apps/dotnet/aspnetcore"
+# Define apps to build (compatible with Bash 3.2+)
+APPS=(
+    "python-flask:sample-apps/python/flask"
+    "nodejs-express:sample-apps/nodejs/express"
+    "java-springboot:sample-apps/java/springboot"
+    "dotnet-aspnetcore:sample-apps/dotnet/aspnetcore"
+)
 
 # Build and push each app
-for APP_NAME in "${!APPS[@]}"; do
-    APP_DIR="${APPS[$APP_NAME]}"
+for APP_ENTRY in "${APPS[@]}"; do
+    APP_NAME="${APP_ENTRY%%:*}"
+    APP_DIR="${APP_ENTRY#*:}"
     ECR_REPO_NAME="$APP_NAME"
     ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME"
 

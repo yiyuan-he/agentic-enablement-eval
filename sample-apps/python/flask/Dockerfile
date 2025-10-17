@@ -12,4 +12,4 @@ ENV SERVICE_NAME=python-flask-app
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+CMD ["opentelemetry-instrument", "python", "app.py"]

@@ -2,6 +2,13 @@
 
 set -e
 
+# Set CDK environment variables from AWS CLI config
+export CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+export CDK_DEFAULT_REGION=$(aws configure get region || echo "us-east-1")
+
+echo "Deploying to account: $CDK_DEFAULT_ACCOUNT"
+echo "Deploying to region: $CDK_DEFAULT_REGION"
+
 cd infrastructure/ec2/cdk
 
 echo "=================================================="

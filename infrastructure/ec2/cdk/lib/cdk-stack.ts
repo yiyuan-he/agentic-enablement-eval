@@ -24,13 +24,14 @@ export class EC2AppStack extends cdk.Stack {
       isDefault: true,
     });
 
-    // IAM role for EC2 with S3 read permissions, ECR pull, and SSM access
+    // IAM role for EC2 with S3 read permissions, ECR pull, SSM access, and CloudWatch Agent
     const role = new iam.Role(this, 'AppRole', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3ReadOnlyAccess'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy'),
       ],
     });
 
@@ -56,6 +57,35 @@ export class EC2AppStack extends cdk.Stack {
       '# Update and install dependencies',
       'yum update -y',
       'yum install -y docker',
+      '',
+      '# Download and install CloudWatch Agent',
+      'wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm',
+      'rpm -U ./amazon-cloudwatch-agent.rpm',
+      '',
+      '# Create CloudWatch Agent configuration for Application Signals',
+      'mkdir -p /opt/aws/amazon-cloudwatch-agent/etc',
+      'cat > /tmp/cw-appsignals-config.json << \'EOF\'',
+      '{',
+      '"traces": {',
+      '"traces_collected": {',
+      '"application_signals": {}',
+      '}',
+      '},',
+      '"logs": {',
+      '"metrics_collected": {',
+      '"application_signals": {}',
+      '}',
+      '}',
+      '}',
+      'EOF',
+      'mv /tmp/cw-appsignals-config.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
+      '',
+      '# Start CloudWatch Agent with Application Signals configuration',
+      '/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \\',
+      '  -a fetch-config \\',
+      '  -m ec2 \\',
+      '  -s \\',
+      '  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json',
       '',
       '# Start Docker service',
       'systemctl start docker',

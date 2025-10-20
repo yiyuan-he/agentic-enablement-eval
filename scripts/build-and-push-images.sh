@@ -22,6 +22,30 @@ APPS=(
     "dotnet-aspnetcore:sample-apps/dotnet/aspnetcore"
 )
 
+# Check if specific app was requested
+SPECIFIC_APP="$1"
+if [ -n "$SPECIFIC_APP" ]; then
+    echo "Building only: $SPECIFIC_APP"
+    echo ""
+    # Filter to only the requested app
+    FILTERED_APPS=()
+    for APP_ENTRY in "${APPS[@]}"; do
+        APP_NAME="${APP_ENTRY%%:*}"
+        if [ "$APP_NAME" = "$SPECIFIC_APP" ]; then
+            FILTERED_APPS+=("$APP_ENTRY")
+            break
+        fi
+    done
+
+    if [ ${#FILTERED_APPS[@]} -eq 0 ]; then
+        echo "Error: App '$SPECIFIC_APP' not found."
+        echo "Available apps: python-flask, nodejs-express, java-springboot, dotnet-aspnetcore"
+        exit 1
+    fi
+
+    APPS=("${FILTERED_APPS[@]}")
+fi
+
 # Build and push each app
 for APP_ENTRY in "${APPS[@]}"; do
     APP_NAME="${APP_ENTRY%%:*}"

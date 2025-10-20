@@ -42,7 +42,7 @@ if [ ! -d ".terraform" ]; then
 fi
 
 # Apply with the specific config
-terraform apply -var-file="config/${APP_NAME}.tfvars" -auto-approve
+terraform apply -var-file="config/${APP_NAME}.tfvars" -var="aws_region=$AWS_REGION" -auto-approve
 
 echo ""
 echo "=================================================="

@@ -37,7 +37,7 @@ echo "=================================================="
 cd infrastructure/ec2/terraform
 
 # Destroy with the specific config
-terraform destroy -var-file="config/${APP_NAME}.tfvars" -auto-approve
+terraform destroy -var-file="config/${APP_NAME}.tfvars" -var="aws_region=$AWS_REGION" -auto-approve
 
 echo ""
 echo "=================================================="

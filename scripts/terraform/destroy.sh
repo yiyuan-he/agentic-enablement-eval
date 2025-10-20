@@ -36,8 +36,19 @@ echo "=================================================="
 
 cd infrastructure/ec2/terraform
 
-# Destroy with the specific config
-terraform destroy -var-file="config/${APP_NAME}.tfvars" -var="aws_region=$AWS_REGION" -auto-approve
+# Select workspace for this app (if it exists)
+if terraform workspace select "$APP_NAME" 2>/dev/null; then
+    # Destroy with the specific config
+    terraform destroy -var-file="config/${APP_NAME}.tfvars" -var="aws_region=$AWS_REGION" -auto-approve
+
+    # Switch back to default workspace before deleting
+    terraform workspace select default
+
+    # Delete the workspace
+    terraform workspace delete "$APP_NAME"
+else
+    echo "Workspace $APP_NAME does not exist, nothing to destroy"
+fi
 
 echo ""
 echo "=================================================="

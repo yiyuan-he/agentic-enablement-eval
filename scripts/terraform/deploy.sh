@@ -41,6 +41,9 @@ if [ ! -d ".terraform" ]; then
     terraform init
 fi
 
+# Create or select workspace for this app
+terraform workspace select "$APP_NAME" 2>/dev/null || terraform workspace new "$APP_NAME"
+
 # Apply with the specific config
 terraform apply -var-file="config/${APP_NAME}.tfvars" -var="aws_region=$AWS_REGION" -auto-approve
 

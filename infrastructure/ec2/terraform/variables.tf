@@ -27,6 +27,18 @@ variable "image_name" {
   type        = string
 }
 
+variable "health_check_path" {
+  description = "Health check endpoint path"
+  type        = string
+  default     = "/health"
+}
+
+variable "language" {
+  description = "Application language"
+  type        = string
+  default     = "unknown"
+}
+
 variable "ecr_account_id" {
   description = "AWS account ID for ECR registry"
   type        = string

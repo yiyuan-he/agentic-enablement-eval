@@ -9,12 +9,12 @@ output "instance_public_ip" {
 }
 
 output "health_check_url" {
-  description = "${var.app_name} Health Endpoint"
+  description = "Application Health Endpoint"
   value       = "http://${aws_instance.app.public_ip}:${var.app_port}${var.health_check_path}"
 }
 
 output "buckets_api_url" {
-  description = "${var.app_name} Buckets API Endpoint"
+  description = "Application Buckets API Endpoint"
   value       = "http://${aws_instance.app.public_ip}:${var.app_port}/api/buckets"
 }
 

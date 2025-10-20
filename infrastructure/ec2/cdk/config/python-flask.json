@@ -1,8 +1,9 @@
 {
-  "appName": "python-flask",
+  "appName": "python-flask-cdk",
+  "imageName": "python-flask",
   "language": "python",
   "port": 5000,
   "appDirectory": "../../../sample-apps/python/flask",
   "healthCheckPath": "/health",
-  "serviceName": "python-flask-app"
+  "serviceName": "python-flask-cdk"
 }

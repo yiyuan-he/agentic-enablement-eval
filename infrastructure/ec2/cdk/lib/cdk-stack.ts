@@ -5,6 +5,7 @@ import { Construct } from 'constructs';
 
 export interface AppConfig {
   appName: string;
+  imageName: string;
   language: string;
   port: number;
   appDirectory: string;
@@ -17,7 +18,7 @@ export class EC2AppStack extends cdk.Stack {
     super(scope, id, props);
 
     // Construct ECR image URI using convention
-    const ecrImageUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${config.appName}:latest`;
+    const ecrImageUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${config.imageName}:latest`;
 
     // Use default VPC
     const vpc = ec2.Vpc.fromLookup(this, 'DefaultVPC', {

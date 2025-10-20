@@ -107,21 +107,14 @@ resource "aws_instance" "app" {
   instance_type          = var.instance_type
   iam_instance_profile   = aws_iam_instance_profile.app_profile.name
   vpc_security_group_ids = [aws_security_group.app_sg.id]
-  user_data              = data.template_file.user_data.rendered
-
-  tags = {
-    Name = var.app_name
-  }
-}
-
-# User data script
-data "template_file" "user_data" {
-  template = file("${path.module}/user_data.sh")
-
-  vars = {
+  user_data              = templatefile("${path.module}/user_data.sh", {
     app_name   = var.app_name
     app_port   = var.app_port
     image_uri  = local.image_uri
     aws_region = var.aws_region
+  })
+
+  tags = {
+    Name = var.app_name
   }
 }

@@ -134,14 +134,38 @@ verify_deployment() {
 
 # Main test loop
 main() {
-  print_status "Starting CDK EC2 Application Signals enablement test"
-  print_status "Testing ${#TEST_CASES[@]} applications"
+  # Check if specific app is requested
+  local requested_app="$1"
+  local filtered_cases=()
+
+  if [ -n "$requested_app" ]; then
+    print_status "Testing single application: $requested_app"
+    # Filter to only the requested app
+    for test_case in "${TEST_CASES[@]}"; do
+      IFS=':' read -r config_file language framework app_dir stack_name <<< "$test_case"
+      if [ "$config_file" = "$requested_app" ]; then
+        filtered_cases+=("$test_case")
+        break
+      fi
+    done
+
+    if [ ${#filtered_cases[@]} -eq 0 ]; then
+      print_error "App '$requested_app' not found."
+      echo "Available apps: python-flask, nodejs-express, java-springboot, dotnet-aspnetcore"
+      exit 1
+    fi
+  else
+    print_status "Starting CDK EC2 Application Signals enablement test"
+    print_status "Testing ${#TEST_CASES[@]} applications"
+    filtered_cases=("${TEST_CASES[@]}")
+  fi
+
   echo ""
 
   local iteration=1
-  local total=${#TEST_CASES[@]}
+  local total=${#filtered_cases[@]}
 
-  for test_case in "${TEST_CASES[@]}"; do
+  for test_case in "${filtered_cases[@]}"; do
     IFS=':' read -r config_file language framework app_dir stack_name <<< "$test_case"
 
     echo ""
@@ -187,8 +211,15 @@ main() {
   echo ""
   echo "========================================================================"
   print_success "All tests completed!"
-  print_status "All 4 stacks are now deployed. Wait a few minutes for telemetry to flow."
-  print_status "To destroy all stacks later, run: ./scripts/cdk/destroy.sh"
+  if [ ${#filtered_cases[@]} -eq 1 ]; then
+    # Get the stack name from the filtered case
+    IFS=':' read -r config_file language framework app_dir stack_name <<< "${filtered_cases[0]}"
+    print_status "Stack deployed. Wait a few minutes for telemetry to flow."
+    print_status "To destroy: ./scripts/cdk/destroy.sh $stack_name"
+  else
+    print_status "All 4 stacks are now deployed. Wait a few minutes for telemetry to flow."
+    print_status "To destroy all stacks later, run: ./scripts/cdk/destroy-all.sh"
+  fi
   echo "========================================================================"
 }
 

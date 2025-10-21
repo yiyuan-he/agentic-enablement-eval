@@ -2,23 +2,41 @@
 
 set -e
 
-# Usage: ./scripts/cdk/destroy.sh <stack-name>
-# Example: ./scripts/cdk/destroy.sh PythonFlaskCdkStack
-
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <stack-name>"
+    echo "Usage: $0 <app-name>"
     echo ""
-    echo "Available stacks:"
-    echo "  PythonFlaskCdkStack"
-    echo "  NodejsExpressCdkStack"
-    echo "  JavaSpringbootCdkStack"
-    echo "  DotnetAspnetcoreCdkStack"
+    echo "Available apps:"
+    echo "  python-flask"
+    echo "  nodejs-express"
+    echo "  java-springboot"
+    echo "  dotnet-aspnetcore"
     echo ""
     echo "To destroy all stacks, use: ./scripts/cdk/destroy-all.sh"
     exit 1
 fi
 
-STACK_NAME=$1
+APP_NAME=$1
+
+# Map app name to CDK stack name
+case "$APP_NAME" in
+    python-flask)
+        STACK_NAME="PythonFlaskCdkStack"
+        ;;
+    nodejs-express)
+        STACK_NAME="NodejsExpressCdkStack"
+        ;;
+    java-springboot)
+        STACK_NAME="JavaSpringbootCdkStack"
+        ;;
+    dotnet-aspnetcore)
+        STACK_NAME="DotnetAspnetcoreCdkStack"
+        ;;
+    *)
+        echo "Error: Unknown app name: $APP_NAME"
+        echo "Available apps: python-flask, nodejs-express, java-springboot, dotnet-aspnetcore"
+        exit 1
+        ;;
+esac
 
 # Set CDK environment variables from AWS CLI config
 export CDK_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)

@@ -43,8 +43,8 @@ reset_changes() {
   cd "$PROJECT_ROOT"
 
   # Reset all infrastructure files
-  git checkout -- infrastructure/ec2/terraform/ 2>/dev/null || true
-  git clean -fd infrastructure/ec2/terraform/ || true
+  git checkout -- infrastructure/ec2/cloudformation/ 2>/dev/null || true
+  git clean -fd infrastructure/ec2/cloudformation/ || true
 
   # Reset all sample app files (Dockerfiles, code, etc.)
   git checkout -- sample-apps/ 2>/dev/null || true
@@ -62,7 +62,7 @@ run_ai_enablement() {
 
   print_status "Running AI enablement for $app_name..."
 
-  local prompt="enable application signals for my $language $framework app on ec2. my iac directory is infrastructure/ec2/terraform and my app directory is $app_dir"
+  local prompt="enable application signals for my $language $framework app on ec2. my iac directory is infrastructure/ec2/cloudformation and my app directory is $app_dir"
 
   cd "$PROJECT_ROOT"
 
@@ -84,7 +84,7 @@ build_and_push_image() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/build-and-push-images.sh" ]]; then
-    ./scripts/build-and-push-images.sh "$app_name"
+    scripts/build-and-push-images.sh "$app_name"
     print_success "Docker image built and pushed for $app_name"
   else
     print_error "build-and-push-images.sh script not found"
@@ -92,18 +92,18 @@ build_and_push_image() {
   fi
 }
 
-# Function to deploy with Terraform
-deploy_terraform() {
+# Function to deploy with CloudFormation
+deploy_cloudformation() {
   local app_name=$1
 
-  print_status "Deploying $app_name with Terraform..."
+  print_status "Deploying $app_name with CloudFormation..."
   cd "$PROJECT_ROOT"
 
-  if [[ -f "scripts/terraform/deploy.sh" ]]; then
-    ./scripts/terraform/deploy.sh "$app_name"
-    print_success "Terraform deployment completed for $app_name"
+  if [[ -f "scripts/cloudformation/deploy.sh" ]]; then
+    scripts/cloudformation/deploy.sh "$app_name"
+    print_success "CloudFormation deployment completed for $app_name"
   else
-    print_error "terraform deploy.sh script not found"
+    print_error "cloudformation deploy.sh script not found"
     return 1
   fi
 }
@@ -111,12 +111,13 @@ deploy_terraform() {
 # Function to verify deployment
 verify_deployment() {
   local app_name=$1
+  local stack_name="${app_name}-cfn"
 
-  print_status "Verifying deployment for $app_name..."
+  print_status "Verifying deployment for $stack_name..."
 
-  # Get the instance ID
-  cd "$PROJECT_ROOT/infrastructure/ec2/terraform"
-  local instance_id=$(terraform output -raw instance_id 2>/dev/null || echo "")
+  # Get the instance ID from CloudFormation stack
+  cd "$PROJECT_ROOT"
+  local instance_id=$(aws cloudformation describe-stacks --stack-name "$stack_name" --query 'Stacks[0].Outputs[?OutputKey==`InstanceId`].OutputValue' --output text 2>/dev/null || echo "")
 
   if [[ -z "$instance_id" ]]; then
     print_warning "Could not get instance ID, skipping container check"
@@ -130,22 +131,6 @@ verify_deployment() {
   # Check if container is running (optional - requires SSM access)
   print_status "Container should be running. Check manually if needed."
   print_success "Deployment verification completed (basic checks passed)"
-}
-
-# Function to destroy infrastructure
-destroy_terraform() {
-  local app_name=$1
-
-  print_status "Destroying infrastructure for $app_name..."
-  cd "$PROJECT_ROOT"
-
-  if [[ -f "scripts/terraform/destroy.sh" ]]; then
-    ./scripts/terraform/destroy.sh "$app_name"
-    print_success "Infrastructure destroyed for $app_name"
-  else
-    print_error "terraform destroy.sh script not found"
-    return 1
-  fi
 }
 
 # Main test loop
@@ -171,7 +156,7 @@ main() {
       exit 1
     fi
   else
-    print_status "Starting Terraform EC2 Application Signals enablement test"
+    print_status "Starting CloudFormation EC2 Application Signals enablement test"
     print_status "Testing ${#TEST_CASES[@]} applications"
     filtered_cases=("${TEST_CASES[@]}")
   fi
@@ -207,9 +192,9 @@ main() {
       continue
     fi
 
-    # Step 4: Deploy with Terraform
-    if ! deploy_terraform "$app_name"; then
-      print_error "Terraform deployment failed for $app_name, skipping to next iteration"
+    # Step 4: Deploy with CloudFormation
+    if ! deploy_cloudformation "$app_name"; then
+      print_error "CloudFormation deployment failed for $app_name, skipping to next iteration"
       ((iteration++))
       continue
     fi
@@ -229,10 +214,10 @@ main() {
   print_success "All tests completed!"
   if [ ${#filtered_cases[@]} -eq 1 ]; then
     print_status "Stack deployed. Wait a few minutes for telemetry to flow."
-    print_status "To destroy: ./scripts/terraform/destroy.sh $requested_app"
+    print_status "To destroy: scripts/cloudformation/destroy.sh $requested_app"
   else
     print_status "All 4 stacks are now deployed. Wait a few minutes for telemetry to flow."
-    print_status "To destroy all stacks later, run: ./scripts/terraform/destroy-all.sh"
+    print_status "To destroy all stacks later, run: scripts/cloudformation/destroy-all.sh"
   fi
   echo "========================================================================"
 }

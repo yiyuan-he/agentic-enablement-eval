@@ -14,16 +14,16 @@ Automated testing for Application Signals enablement across 4 languages (Python,
 
 **Test all 4 languages:**
 ```bash
-./scripts/test-cdk-ec2.sh
-./scripts/test-terraform-ec2.sh
-./scripts/test-cloudformation-ec2.sh
+./scripts/cdk/test-ec2.sh
+./scripts/terraform/test-ec2.sh
+./scripts/cloudformation/test-ec2.sh
 ```
 
 **Test single language:**
 ```bash
-./scripts/test-cdk-ec2.sh python-flask
-./scripts/test-terraform-ec2.sh python-flask
-./scripts/test-cloudformation-ec2.sh python-flask
+./scripts/cdk/test-ec2.sh python-flask
+./scripts/terraform/test-ec2.sh python-flask
+./scripts/cloudformation/test-ec2.sh python-flask
 
 # Available: python-flask, nodejs-express, java-springboot, dotnet-aspnetcore
 ```

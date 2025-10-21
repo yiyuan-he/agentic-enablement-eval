@@ -84,7 +84,7 @@ build_and_push_image() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/build-and-push-images.sh" ]]; then
-    scripts/build-and-push-images.sh "$app_name"
+    ./scripts/build-and-push-images.sh "$app_name"
     print_success "Docker image built and pushed for $app_name"
   else
     print_error "build-and-push-images.sh script not found"
@@ -100,7 +100,7 @@ deploy_terraform() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/terraform/deploy.sh" ]]; then
-    scripts/terraform/deploy.sh "$app_name"
+    ./scripts/terraform/deploy.sh "$app_name"
     print_success "Terraform deployment completed for $app_name"
   else
     print_error "terraform deploy.sh script not found"

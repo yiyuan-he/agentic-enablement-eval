@@ -84,7 +84,7 @@ build_and_push_image() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/build-and-push-images.sh" ]]; then
-    scripts/build-and-push-images.sh "$config_file"
+    ./scripts/build-and-push-images.sh "$config_file"
     print_success "Docker image built and pushed for $config_file"
   else
     print_error "build-and-push-images.sh script not found"
@@ -100,7 +100,7 @@ deploy_cdk() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/cdk/deploy.sh" ]]; then
-    scripts/cdk/deploy.sh "$stack_name"
+    ./scripts/cdk/deploy.sh "$stack_name"
     print_success "CDK deployment completed for $stack_name"
   else
     print_error "cdk deploy.sh script not found"
@@ -215,10 +215,10 @@ main() {
     # Get the stack name from the filtered case
     IFS=':' read -r config_file language framework app_dir stack_name <<< "${filtered_cases[0]}"
     print_status "Stack deployed. Wait a few minutes for telemetry to flow."
-    print_status "To destroy: scripts/cdk/destroy.sh $stack_name"
+    print_status "To destroy: ./scripts/cdk/destroy.sh $stack_name"
   else
     print_status "All 4 stacks are now deployed. Wait a few minutes for telemetry to flow."
-    print_status "To destroy all stacks later, run: scripts/cdk/destroy-all.sh"
+    print_status "To destroy all stacks later, run: ./scripts/cdk/destroy-all.sh"
   fi
   echo "========================================================================"
 }

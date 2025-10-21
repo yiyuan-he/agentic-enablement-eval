@@ -84,7 +84,7 @@ build_and_push_image() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/build-and-push-images.sh" ]]; then
-    scripts/build-and-push-images.sh "$app_name"
+    ./scripts/build-and-push-images.sh "$app_name"
     print_success "Docker image built and pushed for $app_name"
   else
     print_error "build-and-push-images.sh script not found"
@@ -100,7 +100,7 @@ deploy_cloudformation() {
   cd "$PROJECT_ROOT"
 
   if [[ -f "scripts/cloudformation/deploy.sh" ]]; then
-    scripts/cloudformation/deploy.sh "$app_name"
+    ./scripts/cloudformation/deploy.sh "$app_name"
     print_success "CloudFormation deployment completed for $app_name"
   else
     print_error "cloudformation deploy.sh script not found"
@@ -214,10 +214,10 @@ main() {
   print_success "All tests completed!"
   if [ ${#filtered_cases[@]} -eq 1 ]; then
     print_status "Stack deployed. Wait a few minutes for telemetry to flow."
-    print_status "To destroy: scripts/cloudformation/destroy.sh $requested_app"
+    print_status "To destroy: ./scripts/cloudformation/destroy.sh $requested_app"
   else
     print_status "All 4 stacks are now deployed. Wait a few minutes for telemetry to flow."
-    print_status "To destroy all stacks later, run: scripts/cloudformation/destroy-all.sh"
+    print_status "To destroy all stacks later, run: ./scripts/cloudformation/destroy-all.sh"
   fi
   echo "========================================================================"
 }

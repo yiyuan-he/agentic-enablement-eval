@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "AppName",
+    "ParameterValue": "python-flask-cfn"
+  },
+  {
+    "ParameterKey": "ImageName",
+    "ParameterValue": "python-flask"
+  },
+  {
+    "ParameterKey": "AppPort",
+    "ParameterValue": "5000"
+  },
+  {
+    "ParameterKey": "HealthCheckPath",
+    "ParameterValue": "/health"
+  },
+  {
+    "ParameterKey": "Language",
+    "ParameterValue": "python"
+  }
+]

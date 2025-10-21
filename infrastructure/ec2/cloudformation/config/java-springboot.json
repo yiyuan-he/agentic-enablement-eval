@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "AppName",
+    "ParameterValue": "java-springboot-cfn"
+  },
+  {
+    "ParameterKey": "ImageName",
+    "ParameterValue": "java-springboot"
+  },
+  {
+    "ParameterKey": "AppPort",
+    "ParameterValue": "8080"
+  },
+  {
+    "ParameterKey": "HealthCheckPath",
+    "ParameterValue": "/health"
+  },
+  {
+    "ParameterKey": "Language",
+    "ParameterValue": "java"
+  }
+]

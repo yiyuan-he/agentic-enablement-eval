@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EC2 instance with Docker container for Application Signals testing'
+
+Parameters:
+  AppName:
+    Type: String
+    Description: Name of the application
+
+  ImageName:
+    Type: String
+    Description: ECR image name (without -cfn suffix)
+
+  AppPort:
+    Type: Number
+    Description: Application port
+
+  HealthCheckPath:
+    Type: String
+    Description: Health check endpoint path
+    Default: /health
+
+  Language:
+    Type: String
+    Description: Application language
+
+  InstanceType:
+    Type: String
+    Description: EC2 instance type
+    Default: t3.small
+
+Resources:
+  # IAM Role for EC2
+  AppRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AppName}-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AppName}-role'
+
+  # IAM Instance Profile
+  AppInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub '${AppName}-profile'
+      Roles:
+        - !Ref AppRole
+
+  # Security Group
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${AppName}-sg'
+      GroupDescription: !Sub 'Security group for ${AppName}'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref AppPort
+          ToPort: !Ref AppPort
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${AppName}-sg'
+
+  # EC2 Instance
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref AppInstanceProfile
+      SecurityGroupIds:
+        - !Ref AppSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+
+          # Update and install dependencies
+          yum update -y
+          yum install -y docker
+
+          # Start Docker service
+          systemctl start docker
+          systemctl enable docker
+          usermod -a -G docker ec2-user
+
+          # Authenticate with ECR
+          aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+
+          # Pull Docker image
+          docker pull ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}:latest
+
+          # Run container
+          docker run -d --name ${AppName} \
+            -p ${AppPort}:${AppPort} \
+            -e PORT=${AppPort} \
+            -e SERVICE_NAME=${AppName} \
+            -e AWS_REGION=${AWS::Region} \
+            ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}:latest
+
+          # Wait for application to start
+          sleep 10
+
+          # Start traffic generator inside container
+          docker exec -d ${AppName} bash /app/generate-traffic.sh
+
+          echo "Application deployed and traffic generation started"
+      Tags:
+        - Key: Name
+          Value: !Ref AppName
+
+Outputs:
+  InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref AppInstance
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceId'
+
+  InstancePublicIP:
+    Description: EC2 Instance Public IP
+    Value: !GetAtt AppInstance.PublicIp
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicIP'
+
+  HealthCheckURL:
+    Description: Application Health Endpoint
+    Value: !Sub 'http://${AppInstance.PublicIp}:${AppPort}${HealthCheckPath}'
+
+  BucketsAPIURL:
+    Description: Application Buckets API Endpoint
+    Value: !Sub 'http://${AppInstance.PublicIp}:${AppPort}/api/buckets'
+
+  ECRImageURI:
+    Description: ECR image URI used
+    Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageName}:latest'
+
+  Language:
+    Description: Application language
+    Value: !Ref Language

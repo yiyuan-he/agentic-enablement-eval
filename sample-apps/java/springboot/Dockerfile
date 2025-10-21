@@ -12,6 +12,9 @@ FROM amazoncorretto:17
 
 WORKDIR /app
 
+# Install curl for traffic generation
+RUN yum install -y curl && yum clean all
+
 COPY --from=build /app/target/springboot-app-1.0.0.jar app.jar
 COPY generate-traffic.sh .
 

@@ -68,9 +68,6 @@ Resources:
           FromPort: !Ref AppPort
           ToPort: !Ref AppPort
           CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: !Sub '${AppName}-sg'
